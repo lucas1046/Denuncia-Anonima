@@ -2,163 +2,77 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voz Cidadã - Sistema de Denúncias</title>
+    <title>Voz Cidadã - Denúncias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="text-slate-800 antialiased bg-slate-50">
+<body class="bg-slate-50 text-slate-800">
 
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-blue-600 p-2 rounded-xl text-white shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <h1 class="font-bold text-xl tracking-tight text-slate-900">Voz Cidadã</h1>
-            </div>
-            <nav class="flex gap-4 items-center">
-                <button onclick="showView('home')" class="nav-link">Início</button>
-                <button onclick="showView('track')" class="nav-link">Acompanhar</button>
-                <button onclick="showView('admin')" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-black transition text-sm">Painel Admin</button>
-            </nav>
+    <nav class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="font-bold text-xl text-blue-600">Voz Cidadã</h1>
+        <div class="flex gap-4">
+            <button onclick="showView('home')" class="hover:text-blue-600 font-medium">Início</button>
+            <button onclick="showView('track')" class="hover:text-blue-600 font-medium">Consultar</button>
+            <button onclick="showView('admin')" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold">Admin</button>
         </div>
-    </header>
+    </nav>
 
-    <main class="max-w-5xl mx-auto px-6 py-12">
-        
-        <section id="view-home" class="view-section text-center py-10">
-            <h2 class="text-5xl font-black mb-6 text-slate-900">Denúncia Anônima e Segura</h2>
-            <p class="text-slate-500 text-lg mb-10 max-w-2xl mx-auto">Colabore com a sua cidade sem se identificar. Sistema protegido e transparente.</p>
-            <button onclick="startReport()" class="bg-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-blue-700 transition-all">Registrar Denúncia</button>
+    <main class="max-w-4xl mx-auto p-6">
+        <section id="view-home" class="view-section text-center py-20">
+            <h2 class="text-4xl font-black mb-6">Denúncia Anônima</h2>
+            <button onclick="startReport()" class="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg">Nova Denúncia</button>
         </section>
 
-        <section id="view-report" class="view-section hidden">
-            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                <div class="bg-slate-900 p-8 text-white flex justify-between items-center">
-                    <h2 class="text-2xl font-bold">Nova Denúncia</h2>
-                    <div class="flex gap-2">
-                        <span class="step-dot" id="dot-1">1</span>
-                        <span class="step-dot" id="dot-2">2</span>
-                        <span class="step-dot" id="dot-3">3</span>
-                    </div>
+        <section id="view-report" class="view-section hidden bg-white p-8 rounded-3xl shadow-xl">
+            <div id="step-1" class="step-content">
+                <h3 class="text-xl font-bold mb-6">1. Escolha a Categoria</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="selectCat('Segurança', this)" class="cat-btn border-2 p-4 rounded-xl text-left hover:border-blue-500">Segurança e Violência</button>
+                    <button onclick="selectCat('Direitos', this)" class="cat-btn border-2 p-4 rounded-xl text-left hover:border-blue-500">Direitos e Conduta</button>
+                    <button onclick="selectCat('Ambiental', this)" class="cat-btn border-2 p-4 rounded-xl text-left hover:border-blue-500">Meio Ambiente</button>
+                    <button onclick="selectCat('Serviços', this)" class="cat-btn border-2 p-4 rounded-xl text-left hover:border-blue-500">Cidade e Serviços</button>
                 </div>
-
-                <div class="p-8">
-                    <div id="step-1" class="step-content">
-                        <h3 class="font-bold mb-6 text-lg text-blue-600">Selecione a Categoria:</h3>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="cat-card" onclick="selectCat('Segurança e Violência', this)">
-                                <strong>A) Segurança e Violência</strong>
-                                <span>Drogas, furtos, violência doméstica e infantil.</span>
-                            </div>
-                            <div class="cat-card" onclick="selectCat('Direitos e Conduta', this)">
-                                <strong>B) Direitos e Conduta</strong>
-                                <span>Assédio, bullying, discriminação e direitos humanos.</span>
-                            </div>
-                            <div class="cat-card" onclick="selectCat('Meio Ambiente', this)">
-                                <strong>C) Meio Ambiente e Bem-Estar</strong>
-                                <span>Maus-tratos, crimes ambientais e silêncio.</span>
-                            </div>
-                            <div class="cat-card" onclick="selectCat('Cidade e Serviços', this)">
-                                <strong>D) Cidade e Serviços</strong>
-                                <span>Infraestrutura, transporte e serviços públicos.</span>
-                            </div>
-                        </div>
-                        <div class="mt-8 flex justify-end">
-                            <button id="btn-next-1" disabled onclick="goToStep(2)" class="btn-primary opacity-50 cursor-not-allowed">Próximo Passo</button>
-                        </div>
-                    </div>
-
-                    <div id="step-2" class="step-content hidden">
-                        <h3 class="font-bold mb-6 text-lg text-blue-600">Onde ocorreu?</h3>
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <input type="text" id="in-bairro" class="input-field" placeholder="Bairro*">
-                                <input type="text" id="in-rua" class="input-field" placeholder="Rua*">
-                                <input type="text" id="in-ref" class="input-field" placeholder="Ponto de Referência">
-                            </div>
-                            <textarea id="in-relato" rows="6" class="input-field" placeholder="Descreva o ocorrido detalhadamente*"></textarea>
-                        </div>
-                        <div class="mt-8 flex justify-between">
-                            <button onclick="goToStep(1)" class="text-slate-400 font-bold">Voltar</button>
-                            <button onclick="goToStep(3)" class="btn-primary">Próximo Passo</button>
-                        </div>
-                    </div>
-
-                    <div id="step-3" class="step-content hidden">
-                        <h3 class="font-bold mb-6 text-lg text-blue-600">Evidências</h3>
-                        <div class="upload-area" onclick="document.getElementById('file-in').click()">
-                            <p class="text-slate-400 font-medium">Clique para anexar imagens ou vídeos (Simulado)</p>
-                            <input type="file" id="file-in" class="hidden" multiple>
-                        </div>
-                        <div class="mt-8 flex justify-between">
-                            <button onclick="goToStep(2)" class="text-slate-400 font-bold">Voltar</button>
-                            <button onclick="saveReport()" class="bg-green-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-100">Finalizar Denúncia</button>
-                        </div>
-                    </div>
-                </div>
+                <button id="next-1" disabled onclick="nextStep(2)" class="mt-8 w-full bg-slate-200 text-slate-400 py-3 rounded-xl font-bold">Próximo</button>
             </div>
-        </section>
 
-        <section id="view-success" class="view-section hidden text-center">
-            <div class="bg-white p-12 rounded-3xl shadow-xl max-w-2xl mx-auto border border-slate-100">
-                <div class="text-green-500 text-6xl mb-4">✓</div>
-                <h2 class="text-3xl font-bold mb-2">Denúncia Enviada!</h2>
-                <p class="text-slate-500 mb-8">Guarde seu protocolo abaixo. Ele é a única forma de consultar o andamento.</p>
-                <div class="bg-blue-50 p-8 rounded-2xl mb-8">
-                    <p class="text-xs font-bold text-blue-600 uppercase mb-2 tracking-widest">Seu Protocolo:</p>
-                    <span id="display-proto" class="text-4xl font-mono font-black text-blue-900 tracking-tighter"></span>
-                </div>
-                <button onclick="showView('home')" class="text-blue-600 font-bold hover:underline">Voltar ao Início</button>
-            </div>
-        </section>
-
-        <section id="view-track" class="view-section hidden">
-            <div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-xl">
-                <h2 class="text-2xl font-bold mb-6">Acompanhar Status</h2>
-                <div class="flex gap-2 mb-8">
-                    <input type="text" id="track-in" class="input-field font-mono uppercase" placeholder="Insira o protocolo">
-                    <button onclick="searchProtocol()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Buscar</button>
-                </div>
-                <div id="track-res" class="hidden border-t pt-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-slate-400 text-sm font-bold uppercase">Status Atual:</span>
-                        <span id="track-status" class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest"></span>
-                    </div>
-                    <div class="p-4 bg-slate-50 rounded-xl">
-                        <p class="text-sm"><strong>Categoria:</strong> <span id="track-cat" class="text-slate-600"></span></p>
-                    </div>
-                </div>
-                <div id="track-error" class="hidden text-center p-4 bg-red-50 text-red-600 rounded-xl mt-4">Protocolo não encontrado.</div>
+            <div id="step-2" class="step-content hidden">
+                <h3 class="text-xl font-bold mb-6">2. Detalhes</h3>
+                <input type="text" id="in-bairro" placeholder="Bairro" class="w-full p-3 border rounded-xl mb-4">
+                <input type="text" id="in-rua" placeholder="Rua" class="w-full p-3 border rounded-xl mb-4">
+                <textarea id="in-relato" placeholder="Descrição" class="w-full p-3 border rounded-xl mb-4" rows="4"></textarea>
+                <button onclick="finishReport()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">Finalizar Denúncia</button>
             </div>
         </section>
 
         <section id="view-admin" class="view-section hidden">
-            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                <div class="bg-slate-900 p-8 text-white flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-white">Painel Gestor</h2>
-                    <button onclick="renderAdminTable()" class="text-xs bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 text-white">Recarregar Lista</button>
-                </div>
-                <div class="p-6 overflow-x-auto">
+            <div class="bg-white p-6 rounded-3xl shadow-xl">
+                <h2 class="text-2xl font-bold mb-6">Painel do Administrador</h2>
+                <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="text-slate-400 text-xs uppercase tracking-widest border-b">
-                                <th class="py-4 px-2">Protocolo</th>
-                                <th class="py-4 px-2">Categoria</th>
-                                <th class="py-4 px-2">Bairro</th>
-                                <th class="py-4 px-2">Status</th>
-                                <th class="py-4 px-2 text-right">Ação</th>
+                            <tr class="border-b text-slate-400 text-sm">
+                                <th class="p-2">Protocolo</th>
+                                <th class="p-2">Bairro</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2 text-right">Ação</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-table-body">
-                            </tbody>
+                        <tbody id="admin-table-body"></tbody>
                     </table>
-                    <div id="admin-empty" class="hidden py-20 text-center text-slate-400">Nenhuma denúncia cadastrada.</div>
                 </div>
             </div>
         </section>
 
+        <section id="view-track" class="view-section hidden">
+            <div class="bg-white p-8 rounded-3xl shadow-xl">
+                <h2 class="text-2xl font-bold mb-4">Acompanhar</h2>
+                <input type="text" id="track-in" placeholder="Protocolo" class="w-full p-3 border rounded-xl mb-4">
+                <button onclick="track()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Pesquisar</button>
+                <div id="track-res" class="mt-6 p-4 bg-blue-50 rounded-xl hidden">
+                    <p class="font-bold">Status: <span id="res-status" class="text-blue-600 uppercase"></span></p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script src="script.js"></script>
