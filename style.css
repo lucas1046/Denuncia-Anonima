@@ -1,55 +1,69 @@
-/* Botões de Categoria */
-.cat-card {
-    background: #0f172a;
-    border: 1px solid #1e293b;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    text-align: left;
-    font-weight: 600;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+:root {
+    --primary: #2563eb;
+    --secondary: #64748b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --dark: #1e293b;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.cat-card:hover {
-    border-color: #22d3ee;
-    background: #1e293b;
-    transform: translateY(-2px);
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
-.cat-card.selected {
-    background: #22d3ee;
-    color: #020617;
-    box-shadow: 0 0 20px rgba(34,211,238,0.3);
-}
+body { background-color: var(--light); color: var(--dark); line-height: 1.6; }
 
-/* Inputs do Formulário */
-.form-input {
-    width: 100%;
-    background: #020617;
-    border: 1px solid #1e293b;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    color: white;
-    outline: none;
-    transition: all 0.2s;
-}
+.container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
 
-.form-input:focus {
-    border-color: #22d3ee;
-    box-shadow: 0 0 10px rgba(34,211,238,0.1);
-}
+header { background: #fff; padding: 1rem 0; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
 
-/* Transições de Tela */
-.view-section {
-    animation: fadeIn 0.4s ease-out;
-}
+nav { display: flex; justify-content: space-between; align-items: center; }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+.logo { font-size: 1.5rem; font-weight: bold; color: var(--dark); }
+.logo span { color: var(--primary); }
 
-/* Scrollbar Customizado */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #020617; }
-::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+.nav-links { display: flex; list-style: none; gap: 20px; }
+.nav-links a { text-decoration: none; color: var(--secondary); font-weight: 500; transition: 0.3s; }
+.nav-links a:hover { color: var(--primary); }
+
+.admin-btn { background: var(--dark); color: #fff !important; padding: 5px 12px; border-radius: 4px; }
+
+/* Form Style */
+fieldset { border: 1px solid var(--border); padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff; }
+legend { font-weight: bold; padding: 0 10px; color: var(--primary); }
+
+.input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+textarea { min-height: 100px; resize: vertical; }
+
+.btn-primary { background: var(--primary); color: #fff; border: none; padding: 15px 30px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: bold; }
+.btn-secondary { background: var(--secondary); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+
+/* Sections */
+.hidden { display: none; }
+.active-section { display: block; animation: fadeIn 0.5s; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Admin Table */
+.table-container { overflow-x: auto; margin-top: 20px; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
+th { background: var(--dark); color: #fff; }
+
+/* Status Badge */
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+.status-recebida { background: #dbeafe; color: #1e40af; }
+.status-analise { background: #fef3c7; color: #92400e; }
+.status-concluida { background: #dcfce7; color: #166534; }
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: #fff; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; }
+.protocol-badge { font-size: 2rem; font-weight: bold; color: var(--primary); margin: 20px 0; letter-spacing: 2px; }
+
+/* Mobile First */
+@media (max-width: 600px) {
+    .input-group { grid-template-columns: 1fr; }
+    .nav-links { font-size: 0.8rem; gap: 10px; }
+}
