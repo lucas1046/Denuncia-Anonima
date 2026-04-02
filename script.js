@@ -1,109 +1,122 @@
-// Banco de dados simulado no LocalStorage
-let reports = JSON.parse(localStorage.getItem('reports')) || [];
+// Banco de Dados Local
+let reports = JSON.parse(localStorage.getItem('safereport_db')) || [];
 
-// 1. Navegação entre Abas
+// 1. Gerenciador de Navegação (Abas e Landing Page)
 function showSection(sectionId) {
-    document.querySelectorAll('main > section').forEach(section => {
-        section.classList.remove('active-section');
-        section.classList.add('hidden');
+    // Esconde todas as seções principais
+    const sections = ['hero-wrapper', 'user-section', 'status-section', 'admin-section'];
+    sections.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
     });
-    const target = document.getElementById(sectionId);
-    target.classList.remove('hidden');
-    target.classList.add('active-section');
 
-    if(sectionId === 'admin-section') renderAdminTable();
+    // Mostra a seção desejada
+    const target = document.getElementById(sectionId);
+    if(target) {
+        target.classList.remove('hidden');
+        target.classList.add('active-section');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Se for admin, carrega os dados
+    if(sectionId === 'admin-section') renderAdmin();
 }
 
-// 2. Envio de Denúncia & Exercício 4 (Protocolo)
+// 2. Envio de Denúncia (Exercícios 1-4)
 const reportForm = document.getElementById('report-form');
 reportForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const protocol = "SR" + Date.now().toString().slice(-6); // Gerador Simples
+    // Gerar Protocolo Único
+    const protocol = "SR" + Math.floor(100000 + Math.random() * 900000);
     
     const newReport = {
+        id: Date.now(),
         protocol: protocol,
         category: document.getElementById('category').value,
         neighborhood: document.getElementById('neighborhood').value,
         street: document.getElementById('street').value,
         description: document.getElementById('description').value,
         status: 'Recebida',
-        date: new Date().toLocaleDateString()
+        date: new Date().toLocaleDateString('pt-BR')
     };
 
     reports.push(newReport);
-    localStorage.setItem('reports', JSON.stringify(reports));
+    localStorage.setItem('safereport_db', JSON.stringify(reports));
 
-    // Mostrar Modal de Sucesso
+    // Exibir Modal com Protocolo
     document.getElementById('protocol-number').innerText = protocol;
     document.getElementById('modal-protocol').classList.remove('hidden');
-    reportForm.reset();
 });
 
 function closeModal() {
-    const modal = document.getElementById('modal-protocol');
-    modal.classList.add('hidden'); // Adiciona a classe que dá display: none
-    
-    // Opcional: Redireciona o usuário para a seção de consulta após fechar
+    document.getElementById('modal-protocol').classList.add('hidden');
+    reportForm.reset();
     showSection('status-section');
 }
 
-// 3. Exercício 5: Consulta de Status
+// 3. Consulta de Status (Exercício 5)
 function checkStatus() {
-    const search = document.getElementById('search-protocol').value.toUpperCase();
+    const search = document.getElementById('search-protocol').value.trim().toUpperCase();
     const resultDiv = document.getElementById('status-result');
-    const report = reports.find(r => r.protocol === search);
+    const found = reports.find(r => r.protocol === search);
 
-    if (report) {
+    if(found) {
         resultDiv.innerHTML = `
-            <div class="fieldset" style="margin-top:20px; padding:20px; border:1px solid #ddd; border-radius:8px">
-                <p><strong>Status Atual:</strong> <span class="badge status-${report.status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}">${report.status}</span></p>
-                <p><strong>Categoria:</strong> ${report.category}</p>
-                <p><strong>Data de Envio:</strong> ${report.date}</p>
+            <div style="background: white; padding: 25px; border-radius: 12px; border: 2px solid var(--primary); margin-top: 25px">
+                <p><strong>Protocolo:</strong> ${found.protocol}</p>
+                <p><strong>Status:</strong> <span style="color: var(--primary); font-weight: bold">${found.status}</span></p>
+                <p><strong>Categoria:</strong> ${found.category}</p>
+                <p><strong>Enviado em:</strong> ${found.date}</p>
             </div>
         `;
     } else {
-        resultDiv.innerHTML = `<p style="color:red; margin-top:10px">Protocolo não encontrado.</p>`;
+        resultDiv.innerHTML = `<p style="color:red; margin-top: 20px; text-align:center">Protocolo não encontrado. Verifique o código.</p>`;
     }
 }
 
-// 4. Área Administrativa (Consulta e Edição)
-function renderAdminTable() {
+// 4. Funções Administrativas
+function renderAdmin() {
     const tbody = document.getElementById('admin-table-body');
     tbody.innerHTML = '';
 
-    reports.forEach((report, index) => {
-        tbody.innerHTML += `
-            <tr>
-                <td>#${report.protocol}</td>
-                <td>${report.category}</td>
-                <td>${report.neighborhood}</td>
-                <td>
-                    <select onchange="updateStatus(${index}, this.value)">
-                        <option value="Recebida" ${report.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
-                        <option value="Em análise" ${report.status === 'Em análise' ? 'selected' : ''}>Em análise</option>
-                        <option value="Encaminhada" ${report.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
-                        <option value="Concluída" ${report.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
-                    </select>
-                </td>
-                <td>
-                    <button onclick="deleteReport(${index})" class="btn-secondary" style="background:var(--danger)">Excluir</button>
-                </td>
-            </tr>
+    if(reports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Nenhuma denúncia registrada.</td></tr>';
+        return;
+    }
+
+    reports.forEach((report) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${report.protocol}</td>
+            <td>${report.category}</td>
+            <td>${report.neighborhood}</td>
+            <td>
+                <select onchange="updateStatus(${report.id}, this.value)">
+                    <option ${report.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
+                    <option ${report.status === 'Em análise' ? 'selected' : ''}>Em análise</option>
+                    <option ${report.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
+                    <option ${report.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+                </select>
+            </td>
+            <td>
+                <button onclick="deleteReport(${report.id})" style="color: red; border: none; background: none; cursor: pointer; font-weight: bold">Excluir</button>
+            </td>
         `;
+        tbody.appendChild(tr);
     });
 }
 
-function updateStatus(index, newStatus) {
-    reports[index].status = newStatus;
-    localStorage.setItem('reports', JSON.stringify(reports));
-    alert('Status atualizado com sucesso!');
-}
+window.updateStatus = function(id, newStatus) {
+    reports = reports.map(r => r.id === id ? {...r, status: newStatus} : r);
+    localStorage.setItem('safereport_db', JSON.stringify(reports));
+    alert("Status atualizado!");
+};
 
-function deleteReport(index) {
-    if(confirm("Deseja remover este registro?")) {
-        reports.splice(index, 1);
-        localStorage.setItem('reports', JSON.stringify(reports));
-        renderAdminTable();
+window.deleteReport = function(id) {
+    if(confirm("Deseja apagar este registro permanentemente?")) {
+        reports = reports.filter(r => r.id !== id);
+        localStorage.setItem('safereport_db', JSON.stringify(reports));
+        renderAdmin();
     }
-}
+};
