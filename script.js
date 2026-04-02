@@ -13,6 +13,10 @@ let denuncia = {
 function showView(viewId) {
     document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    
+    if(viewId === 'admin') {
+        loadAdminReports();
+    }
 }
 
 // Inicia o processo de denúncia
