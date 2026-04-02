@@ -1,50 +1,49 @@
 /**
- * SafeVoice - Lógica de Persistência e Navegação
- * Chave do localStorage: 'DATABASE_VOICE'
+ * SafeVoice Core Logic
+ * Banco de Dados: LocalStorage (VOZ_DATABASE)
  */
 
-const STORAGE_KEY = 'DATABASE_VOICE';
+const DB_KEY = 'VOZ_DATABASE';
 
-// Estado temporário da denúncia atual (em memória)
+// Estado da denúncia atual em memória
 let currentReport = {
     category: '',
     bairro: '',
     rua: '',
+    ref: '',
     relato: '',
     protocol: '',
-    status: 'RECEBIDA' // Status iniciais: RECEBIDA, EM ANÁLISE, CONCLUÍDA
+    status: 'DENÚNCIA RECEBIDA' // Status iniciais (Ex 5)
 };
 
-// 1. NAVEGAÇÃO ENTRE TELAS
+// --- NAVEGAÇÃO ENTRE TELAS ---
 function showView(viewId) {
-    // Esconde todas as seções
     document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
-    // Mostra a selecionada
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
 
-    // Se entrar no admin, renderiza a tabela na hora
+    // CRÍTICO: Sempre que abrir o Admin, atualiza a tabela
     if(viewId === 'admin') renderAdminTable();
 }
 
-// 2. CONTROLE DO FORMULÁRIO PASSO A PASSO
+// --- FLUXO DE FORMULÁRIO ---
 function startFlow() {
-    // Reseta o objeto temporário
-    currentReport = { category: '', bairro: '', rua: '', relato: '', protocol: '', status: 'RECEBIDA' };
+    // Reset do objeto
+    currentReport = { category: '', bairro: '', rua: '', ref: '', relato: '', protocol: '', status: 'DENÚNCIA RECEBIDA' };
     
-    // Reseta estilos visuais das categorias
+    // Limpeza visual
     document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.form-input').forEach(i => i.value = '');
     
     showView('report');
     nextStep(1);
 }
 
-function setCat(name, element) {
+function setCat(name, el) {
     currentReport.category = name;
-    // Highlight visual
     document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    element.classList.add('selected');
+    el.classList.add('selected');
     
-    // Avança automaticamente após 300ms para o passo 2
+    // Pequeno delay para feedback visual antes de mudar de passo
     setTimeout(() => nextStep(2), 300);
 }
 
@@ -52,56 +51,44 @@ function nextStep(n) {
     document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
     document.getElementById(`step-${n}`).classList.remove('hidden');
 
-    // Atualiza indicadores de linha no topo
+    // Indicadores visuais de progresso
     document.getElementById('step-2-indicator').className = (n >= 2) ? 'h-1 flex-1 bg-cyan-400' : 'h-1 flex-1 bg-slate-800';
 }
 
-function prevStep() {
-    nextStep(1);
-}
-
-// 3. FINALIZAÇÃO E PERSISTÊNCIA
+// --- FINALIZAÇÃO E PROTOCOLO (Ex 4) ---
 function finalize() {
-    const bairro = document.getElementById('field-bairro').value.trim();
-    const rua = document.getElementById('field-rua').value.trim();
-    const relato = document.getElementById('field-relato').value.trim();
+    currentReport.bairro = document.getElementById('field-bairro').value.trim();
+    currentReport.rua = document.getElementById('field-rua').value.trim();
+    currentReport.ref = document.getElementById('field-ref').value.trim();
+    currentReport.relato = document.getElementById('field-relato').value.trim();
 
-    if(!bairro || !relato) return alert("Bairro e Relato são obrigatórios!");
+    if(!currentReport.bairro || !currentReport.relato) {
+        return alert("Por favor, preencha o bairro e o relato da ocorrência.");
+    }
 
-    // Gera protocolo aleatório (Ex: VOZ-4921)
-    const proto = "VOZ-" + Math.floor(1000 + Math.random() * 9000);
-    
-    // Monta o objeto final
-    const fullReport = {
-        ...currentReport,
-        bairro, rua, relato,
-        protocol: proto,
-        date: new Date().toLocaleDateString('pt-br')
-    };
+    // Gerador de Protocolo Aleatório
+    const code = "VOZ-" + Math.floor(1000 + Math.random() * 9000);
+    currentReport.protocol = code;
 
-    // SALVA NO LOCALSTORAGE (DATABASE)
-    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    db.push(fullReport);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    // Persistência no LocalStorage
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+    db.push({...currentReport});
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
 
-    // Mostra Modal de Sucesso
-    document.getElementById('display-proto').innerText = proto;
+    // Exibição do sucesso
+    document.getElementById('display-proto').innerText = code;
     document.getElementById('modal-success').classList.remove('hidden');
 }
 
 function closeModal() {
     document.getElementById('modal-success').classList.add('hidden');
-    // Limpa campos
-    document.getElementById('field-bairro').value = "";
-    document.getElementById('field-rua').value = "";
-    document.getElementById('field-relato').value = "";
     showView('home');
 }
 
-// 4. CONSULTA (USER TRACKING)
+// --- RASTREAMENTO (Ex 5) ---
 function trackReport() {
     const input = document.getElementById('track-input').value.trim().toUpperCase();
-    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
     
     const found = db.find(r => r.protocol === input);
 
@@ -109,56 +96,62 @@ function trackReport() {
         document.getElementById('track-result').classList.remove('hidden');
         document.getElementById('track-status').innerText = found.status;
     } else {
-        alert("Protocolo não encontrado na nossa base.");
+        alert("Protocolo não localizado no sistema.");
         document.getElementById('track-result').classList.add('hidden');
     }
 }
 
-// 5. PAINEL ADMIN (GESTÃO)
+// --- ÁREA DO ADMINISTRADOR (Gestão) ---
 function renderAdminTable() {
-    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
     const tbody = document.getElementById('admin-table-body');
-    tbody.innerHTML = ''; // Limpa a tabela
+    tbody.innerHTML = ''; 
 
-    db.forEach((report, index) => {
+    if(db.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-600">Base de dados vazia.</td></tr>`;
+        return;
+    }
+
+    db.forEach((item, index) => {
         const tr = document.createElement('tr');
         tr.className = "border-b border-slate-800 hover:bg-slate-800/30 transition";
         tr.innerHTML = `
-            <td class="p-4 font-mono text-cyan-400 font-bold">${report.protocol}</td>
-            <td class="p-4">${report.bairro}</td>
+            <td class="p-4 font-mono text-cyan-400 font-bold">${item.protocol}</td>
+            <td class="p-4 text-xs">${item.bairro}</td>
             <td class="p-4">
-                <select onchange="updateStatus(${index}, this.value)" class="bg-slate-950 border border-slate-700 text-[10px] p-1 rounded">
-                    <option value="RECEBIDA" ${report.status === 'RECEBIDA' ? 'selected' : ''}>RECEBIDA</option>
-                    <option value="EM ANÁLISE" ${report.status === 'EM ANÁLISE' ? 'selected' : ''}>EM ANÁLISE</option>
-                    <option value="CONCLUÍDA" ${report.status === 'CONCLUÍDA' ? 'selected' : ''}>CONCLUÍDA</option>
+                <select onchange="updateStatus(${index}, this.value)" class="bg-slate-950 border border-slate-700 text-[10px] p-1 rounded outline-none focus:border-cyan-400">
+                    <option value="DENÚNCIA RECEBIDA" ${item.status === 'DENÚNCIA RECEBIDA' ? 'selected' : ''}>RECEBIDA</option>
+                    <option value="EM ANÁLISE" ${item.status === 'EM ANÁLISE' ? 'selected' : ''}>EM ANÁLISE</option>
+                    <option value="ENCAMINHADA" ${item.status === 'ENCAMINHADA' ? 'selected' : ''}>ENCAMINHADA</option>
+                    <option value="CONCLUÍDA" ${item.status === 'CONCLUÍDA' ? 'selected' : ''}>CONCLUÍDA</option>
                 </select>
             </td>
-            <td class="p-4">
-                <button onclick="deleteReport(${index})" class="text-red-900 hover:text-red-500 font-bold">EXCLUIR</button>
+            <td class="p-4 text-right">
+                <button onclick="deleteItem(${index})" class="text-red-900 hover:text-red-500 text-[10px] font-black uppercase">Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-function updateStatus(idx, newStatus) {
-    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    db[idx].status = newStatus;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    alert("Status do protocolo " + db[idx].protocol + " atualizado para " + newStatus);
+function updateStatus(idx, newVal) {
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+    db[idx].status = newVal;
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    alert("Status do protocolo " + db[idx].protocol + " atualizado.");
 }
 
-function deleteReport(idx) {
+function deleteItem(idx) {
     if(!confirm("Deseja apagar este registro permanentemente?")) return;
-    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
     db.splice(idx, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
     renderAdminTable();
 }
 
 function clearAll() {
-    if(confirm("ATENÇÃO: Isso apagará TODOS os dados do site. Confirmar?")) {
-        localStorage.removeItem(STORAGE_KEY);
+    if(confirm("AVISO: Todos os registros serão apagados. Continuar?")) {
+        localStorage.removeItem(DB_KEY);
         renderAdminTable();
     }
 }
