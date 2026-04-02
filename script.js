@@ -1,152 +1,112 @@
-// Constante para garantir que usamos a mesma "tabela" no localStorage
-const DB_KEY = 'VOZ_CIDADA_DATA';
+const DB_NAME = 'MinhasDenuncias';
+let tempReport = { cat: '', status: 'Recebida' };
 
-// Objeto temporário da denúncia atual
-let report = {
-    category: '',
-    bairro: '',
-    rua: '',
-    relato: '',
-    protocol: '',
-    status: 'Recebida'
-};
-
-// --- NAVEGAÇÃO ---
-function showView(viewId) {
-    document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+function showView(id) {
+    document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`view-${id}`).classList.remove('hidden');
     
-    // Se entrar no admin, renderiza a tabela na hora
-    if(viewId === 'admin') renderAdminTable();
+    // CRITICAL: Se for admin, redesenha a tabela toda vez
+    if(id === 'admin') renderAdmin();
 }
 
 function startReport() {
-    report = { category: '', bairro: '', rua: '', relato: '', protocol: '', status: 'Recebida' };
-    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('btn-next-1').disabled = true;
-    document.getElementById('btn-next-1').classList.add('opacity-50', 'cursor-not-allowed');
+    tempReport = { cat: '', status: 'Recebida' };
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('next-1').disabled = true;
     showView('report');
-    goToStep(1);
+    nextStep(1);
 }
 
-function goToStep(num) {
+function nextStep(n) {
     document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`step-${num}`).classList.remove('hidden');
-    
-    // Atualiza os pontos (dots)
-    for(let i=1; i<=3; i++) {
-        const dot = document.getElementById(`dot-${i}`);
-        if(i <= num) dot.classList.add('active');
-        else dot.classList.remove('active');
-    }
+    document.getElementById(`step-${n}`).classList.remove('hidden');
 }
 
-// --- LÓGICA DO FORMULÁRIO ---
-function selectCat(name, el) {
-    report.category = name;
-    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+function selectCat(cat, el) {
+    tempReport.cat = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
     el.classList.add('selected');
-    
-    const btn = document.getElementById('btn-next-1');
-    btn.disabled = false;
-    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('next-1').disabled = false;
+    document.getElementById('next-1').className = "mt-8 w-full bg-blue-600 text-white py-3 rounded-xl font-bold";
 }
 
-function saveReport() {
-    report.bairro = document.getElementById('in-bairro').value.trim();
-    report.rua = document.getElementById('in-rua').value.trim();
-    report.relato = document.getElementById('in-relato').value.trim();
+function finishReport() {
+    const bairro = document.getElementById('in-bairro').value;
+    const relato = document.getElementById('in-relato').value;
+    const rua = document.getElementById('in-rua').value;
 
-    if(!report.bairro || !report.rua || !report.relato) {
-        alert("Por favor, preencha todos os campos obrigatórios (*)");
-        return;
-    }
+    if(!bairro || !relato) return alert("Preencha os campos!");
 
     // Gera protocolo
-    const id = Math.random().toString(36).substring(2, 6).toUpperCase();
-    report.protocol = `VOZ-2026-${id}`;
+    const proto = "VOZ-" + Math.floor(1000 + Math.random() * 9000);
+    
+    const novaDenuncia = {
+        protocolo: proto,
+        categoria: tempReport.cat,
+        bairro: bairro,
+        rua: rua,
+        relato: relato,
+        status: 'Recebida'
+    };
 
-    // SALVAR NO LOCALSTORAGE
-    const currentDB = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    currentDB.push({...report});
-    localStorage.setItem(DB_KEY, JSON.stringify(currentDB));
+    // Salva
+    const lista = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+    lista.push(novaDenuncia);
+    localStorage.setItem(DB_NAME, JSON.stringify(lista));
 
-    document.getElementById('display-proto').innerText = report.protocol;
-    showView('success');
+    alert("Denúncia enviada! Protocolo: " + proto);
+    showView('home');
 }
 
-// --- CONSULTA (CIDADÃO) ---
-function searchProtocol() {
-    const input = document.getElementById('track-in').value.trim().toUpperCase();
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    const found = db.find(item => item.protocol === input);
+function renderAdmin() {
+    const lista = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+    const body = document.getElementById('admin-table-body');
+    body.innerHTML = '';
 
-    const resBox = document.getElementById('track-res');
-    const errBox = document.getElementById('track-error');
-
-    if(found) {
-        errBox.classList.add('hidden');
-        resBox.classList.remove('hidden');
-        document.getElementById('track-status').innerText = found.status;
-        document.getElementById('track-cat').innerText = found.category;
-    } else {
-        resBox.classList.add('hidden');
-        errBox.classList.remove('hidden');
-    }
-}
-
-// --- ÁREA ADMINISTRATIVA ---
-function renderAdminTable() {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    const tbody = document.getElementById('admin-table-body');
-    const emptyMsg = document.getElementById('admin-empty');
-
-    tbody.innerHTML = '';
-
-    if(db.length === 0) {
-        emptyMsg.classList.remove('hidden');
-        return;
-    }
-
-    emptyMsg.classList.add('hidden');
-
-    db.forEach((item, index) => {
+    lista.forEach((item, index) => {
         const tr = document.createElement('tr');
-        tr.className = "border-b border-slate-50 hover:bg-slate-50 transition";
+        tr.className = "border-b text-sm";
         tr.innerHTML = `
-            <td class="py-4 px-2 font-mono text-xs font-bold text-blue-600">${item.protocol}</td>
-            <td class="py-4 px-2 text-sm">${item.category}</td>
-            <td class="py-4 px-2 text-sm">${item.bairro}</td>
-            <td class="py-4 px-2">
-                <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase">${item.status}</span>
-            </td>
-            <td class="py-4 px-2 text-right">
-                <select class="select-admin" onchange="updateStatus(${index}, this.value)">
-                    <option value="Recebida" ${item.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
-                    <option value="Em Análise" ${item.status === 'Em Análise' ? 'selected' : ''}>Análise</option>
-                    <option value="Encaminhada" ${item.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
-                    <option value="Concluída" ${item.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+            <td class="p-2 font-mono">${item.protocolo}</td>
+            <td class="p-2">${item.bairro}</td>
+            <td class="p-2"><span class="text-blue-600 font-bold">${item.status}</span></td>
+            <td class="p-2 text-right">
+                <select onchange="updateStatus(${index}, this.value)" class="border rounded p-1 text-xs">
+                    <option value="Recebida" ${item.status=='Recebida'?'selected':''}>Recebida</option>
+                    <option value="Em Análise" ${item.status=='Em Análise'?'selected':''}>Análise</option>
+                    <option value="Concluída" ${item.status=='Concluída'?'selected':''}>Concluída</option>
                 </select>
-                <button onclick="deleteReport(${index})" class="text-red-400 hover:text-red-600 ml-2">×</button>
+                <button onclick="deleteItem(${index})" class="text-red-500 ml-2">×</button>
             </td>
         `;
-        tbody.appendChild(tr);
+        body.appendChild(tr);
     });
 }
 
-function updateStatus(index, newStatus) {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    db[index].status = newStatus;
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    alert("Status atualizado!");
-    renderAdminTable();
+function updateStatus(idx, novoStatus) {
+    const lista = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+    lista[idx].status = novoStatus;
+    localStorage.setItem(DB_NAME, JSON.stringify(lista));
+    renderAdmin();
 }
 
-function deleteReport(index) {
-    if(confirm("Deseja apagar esta denúncia?")) {
-        const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-        db.splice(index, 1);
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-        renderAdminTable();
+function deleteItem(idx) {
+    if(!confirm("Excluir?")) return;
+    const lista = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+    lista.splice(idx, 1);
+    localStorage.setItem(DB_NAME, JSON.stringify(lista));
+    renderAdmin();
+}
+
+function track() {
+    const busca = document.getElementById('track-in').value;
+    const lista = JSON.parse(localStorage.getItem(DB_NAME) || '[]');
+    const achado = lista.find(d => d.protocolo === busca);
+
+    if(achado) {
+        document.getElementById('track-res').classList.remove('hidden');
+        document.getElementById('res-status').innerText = achado.status;
+    } else {
+        alert("Não encontrado");
     }
 }
