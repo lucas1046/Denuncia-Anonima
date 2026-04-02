@@ -8,6 +8,68 @@ let denuncia = {
     protocolo: '',
     status: 'Recebida'
 };
+// Carrega as denúncias na tabela do administrador
+function loadAdminReports() {
+    const storage = JSON.parse(localStorage.getItem('reports') || '[]');
+    const tableBody = document.getElementById('admin-table-body');
+    const emptyMsg = document.getElementById('admin-empty');
+
+    tableBody.innerHTML = '';
+
+    if (storage.length === 0) {
+        emptyMsg.classList.remove('hidden');
+        return;
+    }
+
+    emptyMsg.classList.add('hidden');
+
+    storage.forEach((report, index) => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-50 hover:bg-slate-50 transition";
+        
+        tr.innerHTML = `
+            <td class="py-4 px-2 font-mono text-xs font-bold">${report.protocol}</td>
+            <td class="py-4 px-2 text-sm">${report.category}</td>
+            <td class="py-4 px-2 text-sm">${report.bairro}</td>
+            <td class="py-4 px-2">
+                <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-blue-100 text-blue-700">
+                    ${report.status}
+                </span>
+            </td>
+            <td class="py-4 px-2 text-right">
+                <select class="select-status" onchange="updateStatus(${index}, this.value)">
+                    <option value="Recebida" ${report.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
+                    <option value="Em Análise" ${report.status === 'Em Análise' ? 'selected' : ''}>Em Análise</option>
+                    <option value="Encaminhada" ${report.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
+                    <option value="Concluída" ${report.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+                </select>
+                <button onclick="deleteReport(${index})" class="text-red-400 hover:text-red-600 ml-2">
+                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+// Atualiza o status de uma denúncia específica
+function updateStatus(index, newStatus) {
+    const storage = JSON.parse(localStorage.getItem('reports') || '[]');
+    storage[index].status = newStatus;
+    localStorage.setItem('reports', JSON.stringify(storage));
+    alert(`Status da denúncia ${storage[index].protocol} atualizado para: ${newStatus}`);
+    loadAdminReports(); // Recarrega a tabela
+}
+
+// Exclui uma denúncia
+function deleteReport(index) {
+    if(confirm("Tem certeza que deseja excluir este registro permanentemente?")) {
+        const storage = JSON.parse(localStorage.getItem('reports') || '[]');
+        storage.splice(index, 1);
+        localStorage.setItem('reports', JSON.stringify(storage));
+        loadAdminReports();
+    }
+}
 
 // Navegação entre as telas (Views)
 function showView(viewId) {
