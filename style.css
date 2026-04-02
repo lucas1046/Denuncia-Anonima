@@ -5,6 +5,19 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #f8fafc;
 }
+.select-status {
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    font-size: 0.875rem;
+    background-color: #f8fafc;
+    outline: none;
+    cursor: pointer;
+}
+
+.select-status:focus {
+    border-color: #2563eb;
+}
 
 .step-dot {
     width: 32px;
