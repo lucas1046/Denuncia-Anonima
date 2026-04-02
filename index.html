@@ -3,62 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeReport | Denúncias Anônimas</title>
+    <title>SafeReport | Denúncias Anônimas e Seguras</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <header>
         <nav class="container">
-            <div class="logo">Safe<span>Report</span></div>
+            <div class="logo" onclick="showSection('hero-wrapper')">Safe<span>Report</span></div>
             <ul class="nav-links">
-                <li><a href="#" onclick="showSection('user-section')">Fazer Denúncia</a></li>
-                <li><a href="#" onclick="showSection('status-section')">Consultar Protocolo</a></li>
+                <li><a href="#" onclick="showSection('hero-wrapper')">Início</a></li>
+                <li><a href="#" onclick="showSection('user-section')">Denunciar</a></li>
+                <li><a href="#" onclick="showSection('status-section')">Consultar</a></li>
                 <li><a href="#" onclick="showSection('admin-section')" class="admin-btn">Painel Admin</a></li>
             </ul>
         </nav>
     </header>
 
-    <main class="container">
-        
-        <section id="user-section" class="active-section">
-            <div class="intro">
-                <h1>Denúncia Anônima</h1>
-                <p>Sua identidade será preservada. Preencha os detalhes abaixo de forma responsável.</p>
+    <main>
+        <div id="hero-wrapper" class="active-section">
+            <section class="hero">
+                <div class="container hero-grid">
+                    <div class="hero-content">
+                        <h1>Sua voz é uma <span>arma contra a impunidade.</span></h1>
+                        <p>Denuncie irregularidades de forma 100% anônima. Protegemos sua identidade enquanto você ajuda a transformar sua cidade.</p>
+                        <div class="hero-cta">
+                            <button class="btn-main" onclick="showSection('user-section')">Fazer Denúncia Agora</button>
+                            <button class="btn-ghost" onclick="showSection('status-section')">Acompanhar Protocolo</button>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="shield-shield">🛡️</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features container">
+                <div class="feature-card">
+                    <span>🔒</span>
+                    <h3>Sigilo Absoluto</h3>
+                    <p>Não rastremaos seu IP ou dados pessoais.</p>
+                </div>
+                <div class="feature-card">
+                    <span>⚡</span>
+                    <h3>Agilidade</h3>
+                    <p>Protocolos enviados em tempo real aos órgãos.</p>
+                </div>
+                <div class="feature-card">
+                    <span>📱</span>
+                    <h3>Mobile First</h3>
+                    <p>Acesse de qualquer lugar, a qualquer hora.</p>
+                </div>
+            </section>
+        </div>
+
+        <section id="user-section" class="container hidden section-padding">
+            <button class="btn-back" onclick="showSection('hero-wrapper')">← Voltar</button>
+            <div class="form-header">
+                <h2>Nova Denúncia Anônima</h2>
+                <p>Preencha os campos abaixo. Os itens com * são obrigatórios.</p>
             </div>
 
             <form id="report-form">
                 <fieldset>
-                    <legend>1. Categoria da Ocorrência</legend>
-                    <div class="category-grid">
-                        <select id="category" required>
-                            <option value="">Selecione uma categoria...</option>
-                            <optgroup label="Segurança e Violência">
-                                <option>Violência contra a mulher/criança/idoso</option>
-                                <option>Furto/Roubo/Drogas</option>
-                                <option>Atividade suspeita</option>
-                            </optgroup>
-                            <optgroup label="Direitos e Conduta">
-                                <option>Assédio/Bullying</option>
-                                <option>Discriminação/Direitos Humanos</option>
-                                <option>Denúncia Institucional</option>
-                            </optgroup>
-                            <optgroup label="Meio Ambiente e Bem-Estar">
-                                <option>Maus-tratos a animais</option>
-                                <option>Crimes ambientais</option>
-                                <option>Perturbação do sossego</option>
-                            </optgroup>
-                            <optgroup label="Cidade e Serviços">
-                                <option>Infraestrutura/Serviços Públicos</option>
-                                <option>Transporte/Trânsito</option>
-                            </optgroup>
-                        </select>
-                    </div>
+                    <legend>1. Categoria da Ocorrência *</legend>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria...</option>
+                        <optgroup label="Segurança e Violência">
+                            <option>Violência contra a mulher/criança/idoso</option>
+                            <option>Furto/Roubo</option>
+                            <option>Tráfico de Drogas</option>
+                            <option>Atividade suspeita</option>
+                        </optgroup>
+                        <optgroup label="Direitos e Conduta">
+                            <option>Assédio moral/sexual</option>
+                            <option>Bullying/Cyberbullying</option>
+                            <option>Discriminação/Direitos Humanos</option>
+                        </optgroup>
+                        <optgroup label="Meio Ambiente e Bem-Estar">
+                            <option>Maus-tratos a animais</option>
+                            <option>Crimes ambientais</option>
+                            <option>Perturbação do sossego</option>
+                        </optgroup>
+                        <optgroup label="Cidade e Serviços">
+                            <option>Infraestrutura urbana</option>
+                            <option>Serviços públicos/Transporte</option>
+                            <option>Irregularidades escolares</option>
+                        </optgroup>
+                    </select>
                 </fieldset>
 
                 <fieldset>
-                    <legend>2. Localização</legend>
-                    <div class="input-group">
+                    <legend>2. Localização *</legend>
+                    <div class="grid-3">
                         <input type="text" id="neighborhood" placeholder="Bairro" required>
                         <input type="text" id="street" placeholder="Rua" required>
                         <input type="text" id="reference" placeholder="Ponto de Referência">
@@ -66,29 +104,35 @@
                 </fieldset>
 
                 <fieldset>
-                    <legend>3. Detalhes e Evidências</legend>
-                    <textarea id="description" placeholder="Descreva o que aconteceu..." required></textarea>
-                    <div class="file-upload">
-                        <label for="evidence">Anexar evidências (Imagem, Vídeo, Documento):</label>
+                    <legend>3. Evidências e Relato *</legend>
+                    <textarea id="description" placeholder="Descreva o que aconteceu com o máximo de detalhes..." required></textarea>
+                    <div class="file-box">
+                        <label>Anexar Provas (Fotos, Vídeos ou Documentos):</label>
                         <input type="file" id="evidence" accept="image/*,video/*,.pdf">
                     </div>
                 </fieldset>
 
-                <button type="submit" class="btn-primary">Enviar Denúncia com Segurança</button>
+                <button type="submit" class="btn-main w-100">Finalizar e Gerar Protocolo</button>
             </form>
         </section>
 
-        <section id="status-section" class="hidden">
-            <h2>Acompanhar Denúncia</h2>
-            <div class="search-box">
-                <input type="text" id="search-protocol" placeholder="Digite seu número de protocolo">
-                <button onclick="checkStatus()" class="btn-secondary">Consultar</button>
+        <section id="status-section" class="container hidden section-padding">
+            <div class="form-header">
+                <h2>Acompanhar Denúncia</h2>
+                <p>Veja em que estágio sua solicitação se encontra.</p>
+            </div>
+            <div class="search-area">
+                <input type="text" id="search-protocol" placeholder="Digite seu protocolo (Ex: SR123456)">
+                <button onclick="checkStatus()" class="btn-main">Consultar Agora</button>
             </div>
             <div id="status-result"></div>
         </section>
 
-        <section id="admin-section" class="hidden">
-            <h2>Painel de Gestão (Administrativo)</h2>
+        <section id="admin-section" class="container hidden section-padding">
+            <div class="form-header">
+                <h2>Painel do Administrador</h2>
+                <p>Gestão de denúncias e atualização de status do sistema.</p>
+            </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -100,22 +144,28 @@
                             <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-table-body">
-                        </tbody>
+                    <tbody id="admin-table-body"></tbody>
                 </table>
             </div>
         </section>
-
     </main>
 
-    <div id="modal-protocol" class="modal hidden">
-    <div class="modal-content">
-        <h3>Denúncia Enviada!</h3>
-        <p>Guarde seu número de protocolo para acompanhamento:</p>
-        <div class="protocol-badge" id="protocol-number"></div>
-        <button type="button" onclick="closeModal()" class="btn-primary">Entendido</button>
+    <div id="modal-protocol" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="check-icon">✓</div>
+            <h3>Denúncia Enviada!</h3>
+            <p>Seu número de protocolo é:</p>
+            <div class="protocol-display" id="protocol-number"></div>
+            <p class="warning">Guarde este número. Ele é a única forma de consultar sua denúncia futuramente.</p>
+            <button onclick="closeModal()" class="btn-main">Entendido</button>
+        </div>
     </div>
-    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SafeReport - Segurança e Cidadania Digital.</p>
+        </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
