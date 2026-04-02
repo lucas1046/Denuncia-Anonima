@@ -1,157 +1,106 @@
-/**
- * SafeVoice Core Logic
- * Banco de Dados: LocalStorage (VOZ_DATABASE)
- */
+// Banco de dados simulado no LocalStorage
+let reports = JSON.parse(localStorage.getItem('reports')) || [];
 
-const DB_KEY = 'VOZ_DATABASE';
+// 1. Navegação entre Abas
+function showSection(sectionId) {
+    document.querySelectorAll('main > section').forEach(section => {
+        section.classList.remove('active-section');
+        section.classList.add('hidden');
+    });
+    const target = document.getElementById(sectionId);
+    target.classList.remove('hidden');
+    target.classList.add('active-section');
 
-// Estado da denúncia atual em memória
-let currentReport = {
-    category: '',
-    bairro: '',
-    rua: '',
-    ref: '',
-    relato: '',
-    protocol: '',
-    status: 'DENÚNCIA RECEBIDA' // Status iniciais (Ex 5)
-};
-
-// --- NAVEGAÇÃO ENTRE TELAS ---
-function showView(viewId) {
-    document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`view-${viewId}`).classList.remove('hidden');
-
-    // CRÍTICO: Sempre que abrir o Admin, atualiza a tabela
-    if(viewId === 'admin') renderAdminTable();
+    if(sectionId === 'admin-section') renderAdminTable();
 }
 
-// --- FLUXO DE FORMULÁRIO ---
-function startFlow() {
-    // Reset do objeto
-    currentReport = { category: '', bairro: '', rua: '', ref: '', relato: '', protocol: '', status: 'DENÚNCIA RECEBIDA' };
+// 2. Envio de Denúncia & Exercício 4 (Protocolo)
+const reportForm = document.getElementById('report-form');
+reportForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const protocol = "SR" + Date.now().toString().slice(-6); // Gerador Simples
     
-    // Limpeza visual
-    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.form-input').forEach(i => i.value = '');
-    
-    showView('report');
-    nextStep(1);
-}
+    const newReport = {
+        protocol: protocol,
+        category: document.getElementById('category').value,
+        neighborhood: document.getElementById('neighborhood').value,
+        street: document.getElementById('street').value,
+        description: document.getElementById('description').value,
+        status: 'Recebida',
+        date: new Date().toLocaleDateString()
+    };
 
-function setCat(name, el) {
-    currentReport.category = name;
-    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    
-    // Pequeno delay para feedback visual antes de mudar de passo
-    setTimeout(() => nextStep(2), 300);
-}
+    reports.push(newReport);
+    localStorage.setItem('reports', JSON.stringify(reports));
 
-function nextStep(n) {
-    document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`step-${n}`).classList.remove('hidden');
-
-    // Indicadores visuais de progresso
-    document.getElementById('step-2-indicator').className = (n >= 2) ? 'h-1 flex-1 bg-cyan-400' : 'h-1 flex-1 bg-slate-800';
-}
-
-// --- FINALIZAÇÃO E PROTOCOLO (Ex 4) ---
-function finalize() {
-    currentReport.bairro = document.getElementById('field-bairro').value.trim();
-    currentReport.rua = document.getElementById('field-rua').value.trim();
-    currentReport.ref = document.getElementById('field-ref').value.trim();
-    currentReport.relato = document.getElementById('field-relato').value.trim();
-
-    if(!currentReport.bairro || !currentReport.relato) {
-        return alert("Por favor, preencha o bairro e o relato da ocorrência.");
-    }
-
-    // Gerador de Protocolo Aleatório
-    const code = "VOZ-" + Math.floor(1000 + Math.random() * 9000);
-    currentReport.protocol = code;
-
-    // Persistência no LocalStorage
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    db.push({...currentReport});
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-
-    // Exibição do sucesso
-    document.getElementById('display-proto').innerText = code;
-    document.getElementById('modal-success').classList.remove('hidden');
-}
+    // Mostrar Modal de Sucesso
+    document.getElementById('protocol-number').innerText = protocol;
+    document.getElementById('modal-protocol').classList.remove('hidden');
+    reportForm.reset();
+});
 
 function closeModal() {
-    document.getElementById('modal-success').classList.add('hidden');
-    showView('home');
+    document.getElementById('modal-protocol').classList.add('hidden');
+    showSection('status-section');
 }
 
-// --- RASTREAMENTO (Ex 5) ---
-function trackReport() {
-    const input = document.getElementById('track-input').value.trim().toUpperCase();
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    
-    const found = db.find(r => r.protocol === input);
+// 3. Exercício 5: Consulta de Status
+function checkStatus() {
+    const search = document.getElementById('search-protocol').value.toUpperCase();
+    const resultDiv = document.getElementById('status-result');
+    const report = reports.find(r => r.protocol === search);
 
-    if(found) {
-        document.getElementById('track-result').classList.remove('hidden');
-        document.getElementById('track-status').innerText = found.status;
-    } else {
-        alert("Protocolo não localizado no sistema.");
-        document.getElementById('track-result').classList.add('hidden');
-    }
-}
-
-// --- ÁREA DO ADMINISTRADOR (Gestão) ---
-function renderAdminTable() {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    const tbody = document.getElementById('admin-table-body');
-    tbody.innerHTML = ''; 
-
-    if(db.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-600">Base de dados vazia.</td></tr>`;
-        return;
-    }
-
-    db.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.className = "border-b border-slate-800 hover:bg-slate-800/30 transition";
-        tr.innerHTML = `
-            <td class="p-4 font-mono text-cyan-400 font-bold">${item.protocol}</td>
-            <td class="p-4 text-xs">${item.bairro}</td>
-            <td class="p-4">
-                <select onchange="updateStatus(${index}, this.value)" class="bg-slate-950 border border-slate-700 text-[10px] p-1 rounded outline-none focus:border-cyan-400">
-                    <option value="DENÚNCIA RECEBIDA" ${item.status === 'DENÚNCIA RECEBIDA' ? 'selected' : ''}>RECEBIDA</option>
-                    <option value="EM ANÁLISE" ${item.status === 'EM ANÁLISE' ? 'selected' : ''}>EM ANÁLISE</option>
-                    <option value="ENCAMINHADA" ${item.status === 'ENCAMINHADA' ? 'selected' : ''}>ENCAMINHADA</option>
-                    <option value="CONCLUÍDA" ${item.status === 'CONCLUÍDA' ? 'selected' : ''}>CONCLUÍDA</option>
-                </select>
-            </td>
-            <td class="p-4 text-right">
-                <button onclick="deleteItem(${index})" class="text-red-900 hover:text-red-500 text-[10px] font-black uppercase">Excluir</button>
-            </td>
+    if (report) {
+        resultDiv.innerHTML = `
+            <div class="fieldset" style="margin-top:20px; padding:20px; border:1px solid #ddd; border-radius:8px">
+                <p><strong>Status Atual:</strong> <span class="badge status-${report.status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}">${report.status}</span></p>
+                <p><strong>Categoria:</strong> ${report.category}</p>
+                <p><strong>Data de Envio:</strong> ${report.date}</p>
+            </div>
         `;
-        tbody.appendChild(tr);
+    } else {
+        resultDiv.innerHTML = `<p style="color:red; margin-top:10px">Protocolo não encontrado.</p>`;
+    }
+}
+
+// 4. Área Administrativa (Consulta e Edição)
+function renderAdminTable() {
+    const tbody = document.getElementById('admin-table-body');
+    tbody.innerHTML = '';
+
+    reports.forEach((report, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>#${report.protocol}</td>
+                <td>${report.category}</td>
+                <td>${report.neighborhood}</td>
+                <td>
+                    <select onchange="updateStatus(${index}, this.value)">
+                        <option value="Recebida" ${report.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
+                        <option value="Em análise" ${report.status === 'Em análise' ? 'selected' : ''}>Em análise</option>
+                        <option value="Encaminhada" ${report.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
+                        <option value="Concluída" ${report.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+                    </select>
+                </td>
+                <td>
+                    <button onclick="deleteReport(${index})" class="btn-secondary" style="background:var(--danger)">Excluir</button>
+                </td>
+            </tr>
+        `;
     });
 }
 
-function updateStatus(idx, newVal) {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    db[idx].status = newVal;
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    alert("Status do protocolo " + db[idx].protocol + " atualizado.");
+function updateStatus(index, newStatus) {
+    reports[index].status = newStatus;
+    localStorage.setItem('reports', JSON.stringify(reports));
+    alert('Status atualizado com sucesso!');
 }
 
-function deleteItem(idx) {
-    if(!confirm("Deseja apagar este registro permanentemente?")) return;
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    db.splice(idx, 1);
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    renderAdminTable();
-}
-
-function clearAll() {
-    if(confirm("AVISO: Todos os registros serão apagados. Continuar?")) {
-        localStorage.removeItem(DB_KEY);
+function deleteReport(index) {
+    if(confirm("Deseja remover este registro?")) {
+        reports.splice(index, 1);
+        localStorage.setItem('reports', JSON.stringify(reports));
         renderAdminTable();
     }
 }
