@@ -41,7 +41,10 @@ reportForm.addEventListener('submit', (e) => {
 });
 
 function closeModal() {
-    document.getElementById('modal-protocol').classList.add('hidden');
+    const modal = document.getElementById('modal-protocol');
+    modal.classList.add('hidden'); // Adiciona a classe que dá display: none
+    
+    // Opcional: Redireciona o usuário para a seção de consulta após fechar
     showSection('status-section');
 }
 
