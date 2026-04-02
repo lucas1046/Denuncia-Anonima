@@ -17,14 +17,41 @@
                 </div>
                 <h1 class="font-bold text-xl tracking-tight">Voz Cidadã</h1>
             </div>
-            <nav class="flex items-center gap-4">
-                <button onclick="showView('home')" class="text-slate-600 font-medium hover:text-blue-600">Início</button>
-                <button onclick="showView('track')" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-200 transition">Consultar Protocolo</button>
+            <nav class="flex gap-4">
+                <button onclick="showView('home')" class="nav-link">Início</button>
+                <button onclick="showView('track')" class="nav-link">Acompanhar</button>
+                <button onclick="showView('admin')" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-black transition">Painel Admin</button>
             </nav>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-6 py-12">
+        <section id="view-admin" class="view-section hidden">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div class="bg-slate-900 p-8 text-white flex justify-between items-center">
+            <h2 class="text-2xl font-bold">Painel de Gestão</h2>
+            <button onclick="loadAdminReports()" class="text-xs bg-slate-700 px-3 py-1 rounded hover:bg-slate-600">Atualizar Lista</button>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-slate-400 text-sm uppercase border-b border-slate-100">
+                            <th class="py-4 px-2">Protocolo</th>
+                            <th class="py-4 px-2">Categoria</th>
+                            <th class="py-4 px-2">Bairro</th>
+                            <th class="py-4 px-2">Status Atual</th>
+                            <th class="py-4 px-2 text-right">Ação</th>
+                        </tr>
+                    </thead>
+                <tbody id="admin-table-body">
+                    </tbody>
+            </table>
+            <div id="admin-empty" class="hidden text-center py-10 text-slate-400">
+                Nenhuma denúncia registrada no sistema.
+            </div>
+        </div>
+    </div>
+</section>
         
         <section id="view-home" class="view-section text-center py-12">
             <h2 class="text-4xl font-black mb-4">Sistema de Denúncias Anônimas</h2>
