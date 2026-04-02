@@ -1,152 +1,164 @@
-// Constante para garantir que usamos a mesma "tabela" no localStorage
-const DB_KEY = 'VOZ_CIDADA_DATA';
+/**
+ * SafeVoice - Lógica de Persistência e Navegação
+ * Chave do localStorage: 'DATABASE_VOICE'
+ */
 
-// Objeto temporário da denúncia atual
-let report = {
+const STORAGE_KEY = 'DATABASE_VOICE';
+
+// Estado temporário da denúncia atual (em memória)
+let currentReport = {
     category: '',
     bairro: '',
     rua: '',
     relato: '',
     protocol: '',
-    status: 'Recebida'
+    status: 'RECEBIDA' // Status iniciais: RECEBIDA, EM ANÁLISE, CONCLUÍDA
 };
 
-// --- NAVEGAÇÃO ---
+// 1. NAVEGAÇÃO ENTRE TELAS
 function showView(viewId) {
-    document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+    // Esconde todas as seções
+    document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+    // Mostra a selecionada
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
-    
+
     // Se entrar no admin, renderiza a tabela na hora
     if(viewId === 'admin') renderAdminTable();
 }
 
-function startReport() {
-    report = { category: '', bairro: '', rua: '', relato: '', protocol: '', status: 'Recebida' };
+// 2. CONTROLE DO FORMULÁRIO PASSO A PASSO
+function startFlow() {
+    // Reseta o objeto temporário
+    currentReport = { category: '', bairro: '', rua: '', relato: '', protocol: '', status: 'RECEBIDA' };
+    
+    // Reseta estilos visuais das categorias
     document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('btn-next-1').disabled = true;
-    document.getElementById('btn-next-1').classList.add('opacity-50', 'cursor-not-allowed');
+    
     showView('report');
-    goToStep(1);
+    nextStep(1);
 }
 
-function goToStep(num) {
-    document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`step-${num}`).classList.remove('hidden');
-    
-    // Atualiza os pontos (dots)
-    for(let i=1; i<=3; i++) {
-        const dot = document.getElementById(`dot-${i}`);
-        if(i <= num) dot.classList.add('active');
-        else dot.classList.remove('active');
-    }
-}
-
-// --- LÓGICA DO FORMULÁRIO ---
-function selectCat(name, el) {
-    report.category = name;
+function setCat(name, element) {
+    currentReport.category = name;
+    // Highlight visual
     document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
+    element.classList.add('selected');
     
-    const btn = document.getElementById('btn-next-1');
-    btn.disabled = false;
-    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    // Avança automaticamente após 300ms para o passo 2
+    setTimeout(() => nextStep(2), 300);
 }
 
-function saveReport() {
-    report.bairro = document.getElementById('in-bairro').value.trim();
-    report.rua = document.getElementById('in-rua').value.trim();
-    report.relato = document.getElementById('in-relato').value.trim();
+function nextStep(n) {
+    document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`step-${n}`).classList.remove('hidden');
 
-    if(!report.bairro || !report.rua || !report.relato) {
-        alert("Por favor, preencha todos os campos obrigatórios (*)");
-        return;
-    }
-
-    // Gera protocolo
-    const id = Math.random().toString(36).substring(2, 6).toUpperCase();
-    report.protocol = `VOZ-2026-${id}`;
-
-    // SALVAR NO LOCALSTORAGE
-    const currentDB = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    currentDB.push({...report});
-    localStorage.setItem(DB_KEY, JSON.stringify(currentDB));
-
-    document.getElementById('display-proto').innerText = report.protocol;
-    showView('success');
+    // Atualiza indicadores de linha no topo
+    document.getElementById('step-2-indicator').className = (n >= 2) ? 'h-1 flex-1 bg-cyan-400' : 'h-1 flex-1 bg-slate-800';
 }
 
-// --- CONSULTA (CIDADÃO) ---
-function searchProtocol() {
-    const input = document.getElementById('track-in').value.trim().toUpperCase();
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    const found = db.find(item => item.protocol === input);
+function prevStep() {
+    nextStep(1);
+}
 
-    const resBox = document.getElementById('track-res');
-    const errBox = document.getElementById('track-error');
+// 3. FINALIZAÇÃO E PERSISTÊNCIA
+function finalize() {
+    const bairro = document.getElementById('field-bairro').value.trim();
+    const rua = document.getElementById('field-rua').value.trim();
+    const relato = document.getElementById('field-relato').value.trim();
+
+    if(!bairro || !relato) return alert("Bairro e Relato são obrigatórios!");
+
+    // Gera protocolo aleatório (Ex: VOZ-4921)
+    const proto = "VOZ-" + Math.floor(1000 + Math.random() * 9000);
+    
+    // Monta o objeto final
+    const fullReport = {
+        ...currentReport,
+        bairro, rua, relato,
+        protocol: proto,
+        date: new Date().toLocaleDateString('pt-br')
+    };
+
+    // SALVA NO LOCALSTORAGE (DATABASE)
+    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    db.push(fullReport);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+
+    // Mostra Modal de Sucesso
+    document.getElementById('display-proto').innerText = proto;
+    document.getElementById('modal-success').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modal-success').classList.add('hidden');
+    // Limpa campos
+    document.getElementById('field-bairro').value = "";
+    document.getElementById('field-rua').value = "";
+    document.getElementById('field-relato').value = "";
+    showView('home');
+}
+
+// 4. CONSULTA (USER TRACKING)
+function trackReport() {
+    const input = document.getElementById('track-input').value.trim().toUpperCase();
+    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    
+    const found = db.find(r => r.protocol === input);
 
     if(found) {
-        errBox.classList.add('hidden');
-        resBox.classList.remove('hidden');
+        document.getElementById('track-result').classList.remove('hidden');
         document.getElementById('track-status').innerText = found.status;
-        document.getElementById('track-cat').innerText = found.category;
     } else {
-        resBox.classList.add('hidden');
-        errBox.classList.remove('hidden');
+        alert("Protocolo não encontrado na nossa base.");
+        document.getElementById('track-result').classList.add('hidden');
     }
 }
 
-// --- ÁREA ADMINISTRATIVA ---
+// 5. PAINEL ADMIN (GESTÃO)
 function renderAdminTable() {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const tbody = document.getElementById('admin-table-body');
-    const emptyMsg = document.getElementById('admin-empty');
+    tbody.innerHTML = ''; // Limpa a tabela
 
-    tbody.innerHTML = '';
-
-    if(db.length === 0) {
-        emptyMsg.classList.remove('hidden');
-        return;
-    }
-
-    emptyMsg.classList.add('hidden');
-
-    db.forEach((item, index) => {
+    db.forEach((report, index) => {
         const tr = document.createElement('tr');
-        tr.className = "border-b border-slate-50 hover:bg-slate-50 transition";
+        tr.className = "border-b border-slate-800 hover:bg-slate-800/30 transition";
         tr.innerHTML = `
-            <td class="py-4 px-2 font-mono text-xs font-bold text-blue-600">${item.protocol}</td>
-            <td class="py-4 px-2 text-sm">${item.category}</td>
-            <td class="py-4 px-2 text-sm">${item.bairro}</td>
-            <td class="py-4 px-2">
-                <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase">${item.status}</span>
-            </td>
-            <td class="py-4 px-2 text-right">
-                <select class="select-admin" onchange="updateStatus(${index}, this.value)">
-                    <option value="Recebida" ${item.status === 'Recebida' ? 'selected' : ''}>Recebida</option>
-                    <option value="Em Análise" ${item.status === 'Em Análise' ? 'selected' : ''}>Análise</option>
-                    <option value="Encaminhada" ${item.status === 'Encaminhada' ? 'selected' : ''}>Encaminhada</option>
-                    <option value="Concluída" ${item.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+            <td class="p-4 font-mono text-cyan-400 font-bold">${report.protocol}</td>
+            <td class="p-4">${report.bairro}</td>
+            <td class="p-4">
+                <select onchange="updateStatus(${index}, this.value)" class="bg-slate-950 border border-slate-700 text-[10px] p-1 rounded">
+                    <option value="RECEBIDA" ${report.status === 'RECEBIDA' ? 'selected' : ''}>RECEBIDA</option>
+                    <option value="EM ANÁLISE" ${report.status === 'EM ANÁLISE' ? 'selected' : ''}>EM ANÁLISE</option>
+                    <option value="CONCLUÍDA" ${report.status === 'CONCLUÍDA' ? 'selected' : ''}>CONCLUÍDA</option>
                 </select>
-                <button onclick="deleteReport(${index})" class="text-red-400 hover:text-red-600 ml-2">×</button>
+            </td>
+            <td class="p-4">
+                <button onclick="deleteReport(${index})" class="text-red-900 hover:text-red-500 font-bold">EXCLUIR</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-function updateStatus(index, newStatus) {
-    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    db[index].status = newStatus;
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    alert("Status atualizado!");
+function updateStatus(idx, newStatus) {
+    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    db[idx].status = newStatus;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    alert("Status do protocolo " + db[idx].protocol + " atualizado para " + newStatus);
+}
+
+function deleteReport(idx) {
+    if(!confirm("Deseja apagar este registro permanentemente?")) return;
+    const db = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    db.splice(idx, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
     renderAdminTable();
 }
 
-function deleteReport(index) {
-    if(confirm("Deseja apagar esta denúncia?")) {
-        const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-        db.splice(index, 1);
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
+function clearAll() {
+    if(confirm("ATENÇÃO: Isso apagará TODOS os dados do site. Confirmar?")) {
+        localStorage.removeItem(STORAGE_KEY);
         renderAdminTable();
     }
 }
