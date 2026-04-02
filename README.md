@@ -25,4 +25,4 @@ O sistema foi construído para atender aos seguintes requisitos operacionais:
 ├── index.html      # Estrutura principal do site e navegação
 ├── style.css       # Estilos personalizados e animações
 ├── script.js       # Lógica do formulário e gestão de protocolos
-└── README.md       # Documentação do projeto# Denuncia-Anonima
+└── README.md       # Documentação do projeto
